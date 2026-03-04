@@ -2951,7 +2951,7 @@ impl Build {
                     format!("arm-kmc-eabi-{gnu}").into()
                 } else if target.arch == "aarch64" && target.vendor == "kmc" {
                     format!("aarch64-kmc-elf-{gnu}").into()
-                } else if target.os == "nto" {
+                } else if target.os == "nto" && self.get_raw_host().is_ok_and(|s| !s.contains("nto")) {
                     // See for details: https://github.com/rust-lang/cc-rs/pull/1319
                     if self.cpp { "q++" } else { "qcc" }.into()
                 } else if self.get_is_cross_compile()? {
@@ -3425,7 +3425,7 @@ impl Build {
                 } else if target.os == "vxworks" {
                     name = format!("wr-{tool}").into();
                     self.cmd(&name)
-                } else if target.os == "nto" {
+                } else if target.os == "nto" && self.get_raw_host().is_ok_and(|s| !s.contains("nto")) {
                     // Ref: https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/a/ar.html
                     name = match target.full_arch {
                         "i586" => format!("ntox86-{tool}").into(),
@@ -3692,12 +3692,16 @@ impl Build {
         }
     }
 
+    fn get_raw_host(&self) -> Result<Cow<'_, str>, Error> {
+        match &self.host {
+            Some(h) => Ok(Cow::Borrowed(h)),
+            None => self.getenv_unwrap_str("HOST").map(Cow::Owned),
+        }
+    }
+
     fn get_is_cross_compile(&self) -> Result<bool, Error> {
         let target = self.get_raw_target()?;
-        let host: Cow<'_, str> = match &self.host {
-            Some(h) => Cow::Borrowed(h),
-            None => Cow::Owned(self.getenv_unwrap_str("HOST")?),
-        };
+        let host = self.get_raw_host()?;
         Ok(host != target)
     }
 
