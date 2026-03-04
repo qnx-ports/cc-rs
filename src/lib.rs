@@ -2133,7 +2133,8 @@ impl Build {
                     }
                 }
 
-                if target.os == "nto" {
+                if target.os == "nto" && cmd.path.file_name() == Some(OsStr::new("qcc"))
+                    || cmd.path.file_name() == Some(OsStr::new("q++")) {
                     // Select the target with `-V`, see qcc documentation:
                     // QNX 7.1: https://www.qnx.com/developers/docs/7.1/index.html#com.qnx.doc.neutrino.utilities/topic/q/qcc.html
                     // QNX 8.0: https://www.qnx.com/developers/docs/8.0/com.qnx.doc.neutrino.utilities/topic/q/qcc.html
